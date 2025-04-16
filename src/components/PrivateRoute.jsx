@@ -1,11 +1,16 @@
-
-import React, { useContext } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 const PrivateRoute = ({ children }) => {
-  const { user } = useContext(AuthContext);
-  return user.authenticated ? children : <Navigate to="/" />;
+  const { user } = useAuth();
+
+  // Если пользователь не авторизован, перенаправляем на страницу входа
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
 };
 
 export default PrivateRoute;

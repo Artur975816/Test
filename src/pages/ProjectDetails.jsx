@@ -1,42 +1,52 @@
-
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchTasks } from '../features/tasks/tasksSlice';
-import { fetchProjects } from '../features/projects/projectsSlice';
-import TaskBoard from '../features/tasks/TaskBoard';
+import { useSelector } from 'react-redux';
+import { useAuth } from '../context/AuthContext';
 
 const ProjectDetails = () => {
   const { id } = useParams();
-  const dispatch = useDispatch();
-
-  const project = useSelector(state =>
+  const { theme, language } = useAuth();
+  const project = useSelector(state => 
     state.projects.list.find(p => p.id === parseInt(id))
   );
-  const tasks = useSelector(state =>
-    state.tasks.list.filter(t => t.projectId === parseInt(id))
-  );
 
-  useEffect(() => {
-    dispatch(fetchProjects());
-    dispatch(fetchTasks());
-  }, [dispatch]);
 
-  if (!project) return <p>Проект не найден...</p>;
+  const statusColors = {
+    'Planned': '#8B4513',
+    'In Progress': '#B8860B',
+    'Completed': '#556B2F'
+  };
+
+  const statusNames = {
+    'Planned': language === 'ru' ? 'Планируется' : 'Planned',
+    'In Progress': language === 'ru' ? 'В работе' : 'In Progress',
+    'Completed': language === 'ru' ? 'Завершено' : 'Completed'
+  };
+
+  if (!project) {
+    return (
+      <div className="steampunk-container">
+        {language === 'ru' ? 'Проект не найден' : 'Project not found'}
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <h2>{project.name}</h2>
-      <p>{project.description}</p>
-      <h3>Задачи:</h3>
-      <ul>
-        {tasks.map(task => (
-          <li key={task.id}>
-            {task.title} - <strong>{task.status}</strong>
-          </li>
-        ))}
-      </ul>
-      <TaskBoard tasks={tasks} />
+    <div className="project-detail-container">
+      <div className="project-gear-large">
+        <div className="gear-teeth-large" />
+        <div className="gear-content">
+          <h2>{project.name}</h2>
+          <p>{project.description}</p>
+          <div 
+            className="project-status"
+            style={{ color: statusColors[project.status] }}
+          >
+            {language === 'ru' ? 'Статус: ' : 'Status: '}
+            {statusNames[project.status]}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

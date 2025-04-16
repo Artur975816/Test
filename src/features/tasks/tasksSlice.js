@@ -1,22 +1,44 @@
-
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import tasksData from '../../data/tasks.json';
 
+// Нормализация статусов
+const normalizeStatus = (status) => {
+  const statusMap = {
+    'Active': 'In Progress',
+    'Ongoing': 'In Progress',
+    'Planned': 'Planned',
+    'Completed': 'Completed'
+  };
+  return statusMap[status] || 'Planned';
+};
+
 export const fetchTasks = createAsyncThunk('tasks/fetchTasks', async () => {
-  return tasksData;
+  const normalizedTasks = tasksData.map(task => ({
+    ...task,
+    status: normalizeStatus(task.status)
+  }));
+  return normalizedTasks;
 });
 
-const tasksSlice = createSlice({
+export const tasksSlice = createSlice({
   name: 'tasks',
   initialState: {
     list: [],
     loading: false,
-    error: null,
+    error: null
   },
-  reducers: {},
-  extraReducers: builder => {
+  reducers: {
+    updateTaskStatus: (state, action) => {
+      const { id, status } = action.payload;
+      const task = state.list.find(t => t.id === id);
+      if (task) {
+        task.status = status;
+      }
+    }
+  },
+  extraReducers: (builder) => {
     builder
-      .addCase(fetchTasks.pending, state => {
+      .addCase(fetchTasks.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
@@ -28,7 +50,8 @@ const tasksSlice = createSlice({
         state.loading = false;
         state.error = action.error.message;
       });
-  },
+  }
 });
 
+export const { updateTaskStatus } = tasksSlice.actions;
 export default tasksSlice.reducer;

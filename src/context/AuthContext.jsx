@@ -1,49 +1,61 @@
-import { useEffect, useState, createContext } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
-// Создаем контекст для авторизации
 export const AuthContext = createContext();
 
-const defaultUser = {
-  id: 1,
-  name: 'Dimash Kudaibergen',
-  role: 'Project Manager',
-  email: 'dimash.kudaibergen@example.kz',
-  location: 'Astana, Kazakhstan',
-  authenticated: false,
-};
-
-// Провайдер контекста
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(defaultUser);
-  const [theme, setTheme] = useState('light');
-  const [language, setLanguage] = useState('en');
+  const [user, setUser] = useState(null);
+  const [theme, setTheme] = useState('steampunk-light');
+  const [language, setLanguage] = useState('ru');
 
-  // Эффект для изменения темы
+  // Загрузка сохраненных настроек
   useEffect(() => {
-    document.body.className = theme; // Меняем класс на body для применения темы
-  }, [theme]); // Эффект срабатывает при изменении темы
+    const storedUser = localStorage.getItem('user');
+    const storedTheme = localStorage.getItem('theme');
+    const storedLanguage = localStorage.getItem('language');
 
-  const login = () => {
-    setUser(prev => ({ ...prev, authenticated: true }));
+    if (storedUser) setUser(JSON.parse(storedUser));
+    if (storedTheme) setTheme(storedTheme);
+    if (storedLanguage) setLanguage(storedLanguage);
+  }, []);
+
+  // Применение темы ко всему документу
+  useEffect(() => {
+    document.documentElement.className = theme;
+    document.documentElement.lang = language;
+  }, [theme, language]);
+
+  const login = (username) => {
+    const userData = { name: username };
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const logout = () => {
-    setUser(prev => ({ ...prev, authenticated: false }));
+    setUser(null);
+    localStorage.removeItem('user');
   };
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+    const newTheme = theme === 'steampunk-light' ? 'steampunk-dark' : 'steampunk-light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
   };
 
   const toggleLanguage = () => {
-    setLanguage(prev => (prev === 'en' ? 'ru' : 'en'));
+    const newLanguage = language === 'ru' ? 'en' : 'ru';
+    setLanguage(newLanguage);
+    localStorage.setItem('language', newLanguage);
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, login, logout, theme, toggleTheme, language, toggleLanguage }}
-    >
+    <AuthContext.Provider value={{
+      user, login, logout,
+      theme, toggleTheme,
+      language, toggleLanguage
+    }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => useContext(AuthContext);
